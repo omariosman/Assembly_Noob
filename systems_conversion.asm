@@ -22,16 +22,17 @@
 		mfhi $s0 #remainder
 		mflo $t0 #quotient
 		sb $s0, ($t1)
-		add $t1, $t1, 1
+		add $t1, $t1, 1 #This increment make the pointer go beyond the last number by one bit [I restore this later]
 		bnez $t0, convert_decimal_to_binary
 
 		
-	la $t1, binary_placeholder
+	
+	sub $t1, $t1, 1 #make the $t1 point to the last bit of the number in memory
 	print_num_in_binary:
 		lb $a0, ($t1)
 		li $v0, 1
 		syscall
-		add $t1, $t1, 1
+		sub $t1, $t1, 1
 		sub $t2, $t2, 1
 		bnez $t2, print_num_in_binary
 	
