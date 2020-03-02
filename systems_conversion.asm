@@ -46,7 +46,7 @@
 	
 	
 	######################################
-	#convert from decimal to octal [not completed]
+	#convert from decimal to octal [completed]
 	
 	li $v0, 4
 	la $a0, enter_num
