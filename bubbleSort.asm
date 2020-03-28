@@ -1,89 +1,146 @@
-.data
-	array: .space 1000
-	aspace: .asciiz " "
-	enter_array_size: .asciiz "\nEnter the array size: "
-	enter_nums: .asciiz "\nEnter the values of the array: "
-	.align 2
-.text
-	la $t0, array
-	#cout enter array size
-	li $v0, 4
-	la $a0, enter_array_size
-	syscall
-	
-	#cin size
-	li $v0, 5
-	syscall
-	move $t3, $v0 #t3 contains size
-	move $s0, $t3 #s0 contains the size of the array
-	move $t5, $s0
-	
-	#cout enter array size
-	li $v0, 4
-	la $a0, enter_nums
-	syscall
-	
-	#Loop to iterate and let the user enter the values of the array
-	enter_array:
-		li $v0, 5 
-		syscall #cin num
-		sw $v0, ($t0) #store in the memory
-		add $t0, $t0, 4 #advance the pointer in the memory
-		sub $t3, $t3, 1 #decrement counter
-		bnez $t3, enter_array #check to see whether go again in loop or get out
-	
-	sub $s1, $s0, 1 #s1 the condition at which i will stop [s1 = n - 1]
-	li $s2, -1 #s2 = i
-	li $s3, 0 #s3 = j
-	la $t0, array #make the pointer in the beg of the array
-	
-	jal bubbleSort #Call the bubbleSort function
-	
-	print_array: #Printing the sorted array after returning from the function
-		lw $t1, ($t0)
-		add $t0, $t0, 4
-		move $a0, $t1
-		li $v0, 1
-		syscall
-		li $v0, 4
-		la $a0, aspace
-		syscall
-		sub $s5, $s5, 1
-		bnez $s5, print_array
+section .data
+	array dq 2,3,1
+	after_sorting_msg db "The sorted array: "
+	len_1 equ $ - after_sorting_msg
+	before_sorting_msg db "The original array: "
+	len_2 equ $ - before_sorting_msg
+	aspace db " "
+	new_line dw 0xa
+section .bss
+	num resb 8
 
-	#terminating the program
-	exit:
-		li $v0, 10
-		syscall
-		
-		
-bubbleSort:
-	first_loop:
-		la $t0, array
-		li $s3, 0
-		add $s2, $s2, 1
-		blt $s2, $s1, second_loop #(if i < n - 1) 
-		b adjust_to_print
-		second_loop:
-			sub $s4 ,$s0, $s2 #calculat condition value
-			sub $s4, $s4, 1 #s4 = n - i - j
-			lw $t1, ($t0) #load num val in a reg
-			lw $t2, 4($t0) #load consecutive num val in a reg
-			bgt $t1, $t2, swap #cmp two nums
-			continue:
-			add $s3, $s3, 1 #increment j
-			add $t0, $t0, 4 #point to the next element
-			blt $s3, $s4, second_loop #enter the second loop again
-			b first_loop
-	swap: #swap the two values in the memory
-		sw $t1, 4($t0)
-		sw $t2,  ($t0)
-		b continue
+section .text
+
+	global _start
+
+_start:
+
+	mov r8, 3 ;n
+	mov r15, r8 ; n temp
+	mov r9, 2 ; n - 1
+	mov r10, -1 ;i
+	mov r11, 0 ;j
 	
-	#make the pointer in the beg of array again to print it
-	adjust_to_print:
-		move $s5, $t5
-		la $t0, array	
-		jr $ra #return back to after jal
-		
+	mov r12, array
+	
+
+
+
+
+
+       
+        mov rax, 1
+        mov rdi, 1
+        mov rsi, before_sorting_msg
+        mov rdx, len_2
+        syscall
+        mov r12, array
+        mov r8, 3
+        jmp first_print_num
+	
+	first_print_num:
+                mov r13, [r12]
+                add r13, '0'
+                mov [r12], r13
+                mov rax, 1
+                mov rdi, 1
+                mov rsi, r12
+                mov rdx, 8
+                syscall
+                mov rax, 1
+                mov rdi, 1
+                mov rsi, aspace
+                mov rdx, 1
+                syscall
+                add r12, 8
+                sub r8, 1
+                cmp r8, 0
+                jnz first_print_num
+
+	mov rax, 1
+	mov rdi, 1
+	mov rsi, new_line	
+	mov rdx, 1
+	syscall
+
+	mov r12, array
+	
+
+
+	
+	call bubbleSort
+
+	adjust:
+		mov rax, 1
+		mov rdi, 1
+		mov rsi, after_sorting_msg
+		mov rdx, len_1
+		syscall
+		mov r12, array
+		mov r8, 3
+		jmp print_num
+        
+	print_num:
+		;mov r13, [r12]
+		;add r13, '0'
+		;mov [r12], r13
+                mov rax, 1
+                mov rdi, 1
+                mov rsi, r12
+                mov rdx, 8
+                syscall
+		mov rax, 1
+		mov rdi, 1
+		mov rsi, aspace
+		mov rdx, 1
+		syscall
+		add r12, 8
+                sub r8, 1
+		cmp r8, 0
+        	jnz print_num
+	
+
+	exit:
+		mov rax, 1
+		int 0x80
+
+
+	bubbleSort:
+		first_loop:
+			mov r12, array
+			mov r11, 0 ;j
+			inc r10 ;i
+			cmp r10, r9
+			jl second_loop
+			jmp adjust
+		second_loop:
+			sub r15, r10 ;n - i
+			sub r15, 1   ;n - i - 1
+			mov r13, [r12]
+			add r12, 8
+			mov r14, [r12]
+			sub r12, 8
+			cmp r13, r14
+			jg swap
+			continue:
+			inc r11 ;j
+			add r12, 8
+			cmp r11, r15 ;if (j < (n - i - 1)) 
+			jl second_loop		
+			jmp first_loop
+		swap:
+			mov [r12], r14
+			add r12, 8
+			mov [r12], r13
+			sub r12, 8
+			jmp continue
+			
+
+
+
+
+
+
+
+
 
